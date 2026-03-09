@@ -5,22 +5,18 @@ const path = require('path');
 const axios = require('axios');
 const useragent = require('useragent');
 const moment = require('moment');
-const fs = require('fs');
+const fs = require('fs'); // أضفنا هذا للسطر
 
 const app = express();
 const server = http.createServer(app);
 
-// ✅ إعدادات Socket.io المحسنة
+// إعدادات CORS
 const io = socketIO(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
     credentials: true
-  },
-  // ✅ إعدادات لمنع انقطاع الاتصال
-  pingTimeout: 60000, // 60 ثانية
-  pingInterval: 25000, // 25 ثانية
-  transports: ['websocket', 'polling'] // استخدام websocket أولاً
+  }
 });
 
 const PORT = process.env.PORT || 3000;
@@ -29,10 +25,8 @@ const PORT = process.env.PORT || 3000;
 let visitors = [];
 let onlineVisitors = 0;
 
-// ✅ تخزين آخر نشاط
-let lastActivity = Date.now();
-
-// المسار الصحيح للمجلد العام
+// ✅ الأهم: تحديد المسار الصحيح للمجلد العام
+// في Render، المسار الحالي هو /opt/render/project/src
 const currentDir = process.cwd();
 const publicPath = path.join(currentDir, 'public');
 
@@ -45,11 +39,11 @@ if (!fs.existsSync(publicPath)) {
     fs.mkdirSync(publicPath, { recursive: true });
 }
 
-// تجهيز الملفات الثابتة
+// تجهيز الملفات الثابتة - طريقتان للتأكد
 app.use(express.static(publicPath));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// CORS
+// ✅ CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -108,17 +102,14 @@ function getDeviceInfo(userAgentString) {
     }
 }
 
-// ✅ مسار اختبار
+// ✅ مسار اختبار لمعرفة المشكلة (مهم جداً)
 app.get('/debug', (req, res) => {
     const files = {
         currentDir: currentDir,
         publicPath: publicPath,
         publicExists: fs.existsSync(publicPath),
         files: [],
-        publicFiles: [],
-        onlineVisitors: onlineVisitors,
-        visitorsCount: visitors.length,
-        lastActivity: moment(lastActivity).fromNow()
+        publicFiles: []
     };
     
     try {
@@ -133,10 +124,8 @@ app.get('/debug', (req, res) => {
     res.json(files);
 });
 
-// ✅ الصفحة الرئيسية
+// ✅ الصفحة الرئيسية مع التحقق من وجود الملف
 app.get('/', (req, res) => {
-    lastActivity = Date.now();
-    
     const possiblePaths = [
         path.join(publicPath, 'index.html'),
         path.join(currentDir, 'public', 'index.html'),
@@ -150,6 +139,7 @@ app.get('/', (req, res) => {
         }
     }
     
+    // إذا لم يوجد الملف
     res.status(404).send(`
         <html>
         <head><title>خطأ</title></head>
@@ -168,11 +158,9 @@ app.get('/', (req, res) => {
     `);
 });
 
-// ✅ رابط التتبع المحسن
+// ✅ مسار التتبع
 app.get('/track', async (req, res) => {
     try {
-        lastActivity = Date.now();
-        
         const clientIP = getClientIP(req);
         const userAgentString = req.headers['user-agent'] || 'غير معروف';
         const referer = req.headers['referer'] || 'زيارة مباشرة';
@@ -199,21 +187,10 @@ app.get('/track', async (req, res) => {
         visitors.unshift(visitor);
         if (visitors.length > 50) visitors.pop();
         
-        // ✅ إرسال بيانات الزائر عبر Socket.io مع محاولات متعددة
-        console.log('📡 إرسال بيانات الزائر عبر Socket.io...');
-        
-        // إرسال للجميع
         io.emit('new-visitor', visitor);
         io.emit('visitors-update', visitors);
         
-        // إرسال للمتصفحات المتصلة حالياً فقط
-        io.sockets.emit('visitor-updated', { 
-            success: true, 
-            count: visitors.length 
-        });
-        
         console.log(`✅ تم تسجيل زائر من: ${location.country} - ${location.city}`);
-        console.log(`📊 عدد الزوار الآن: ${visitors.length}`);
         
         // البحث عن ملف track.html
         const trackPaths = [
@@ -245,104 +222,44 @@ app.get('/track', async (req, res) => {
     }
 });
 
-// ✅ API لجلب بيانات الزوار
+// API لجلب بيانات الزوار
 app.get('/api/visitors', (req, res) => {
-    res.json({
-        success: true,
-        visitors: visitors,
-        count: visitors.length,
-        online: onlineVisitors,
-        lastActivity: moment(lastActivity).format('YYYY-MM-DD HH:mm:ss')
-    });
+    res.json(visitors);
 });
 
-// ✅ صفحة اختبار الاتصال
+// صفحة اختبار الاتصال
 app.get('/ping', (req, res) => {
-    lastActivity = Date.now();
     res.json({ 
         status: 'ok', 
         message: 'السيرفر يعمل على Render',
         time: moment().format('YYYY-MM-DD HH:mm:ss'),
         visitorsCount: visitors.length,
-        onlineVisitors: onlineVisitors,
-        socketConnections: io.engine.clientsCount,
-        lastActivity: moment(lastActivity).fromNow()
+        onlineVisitors: onlineVisitors
     });
 });
 
-// ✅ صفحة لحالة Socket.io
-app.get('/socket-status', (req, res) => {
-    res.json({
-        online: onlineVisitors,
-        socketConnections: io.engine.clientsCount,
-        visitors: visitors.length,
-        lastVisitor: visitors[0] || null,
-        uptime: process.uptime()
-    });
-});
-
-// ✅ Socket.io المحسن
+// Socket.io
 io.on('connection', (socket) => {
     onlineVisitors++;
-    console.log(`🔌 مستخدم جديد متصل - العدد الحالي: ${onlineVisitors} (اتصالات Socket: ${io.engine.clientsCount})`);
-    
-    // إرسال البيانات الحالية للمستخدم الجديد
+    io.emit('online-count', onlineVisitors);
     socket.emit('visitors-update', visitors);
-    socket.emit('online-count', onlineVisitors);
     
-    // إرسال تأكيد الاتصال
-    socket.emit('connected', { 
-        message: 'مرحباً! أنت متصل بالسيرفر',
-        time: moment().format('YYYY-MM-DD HH:mm:ss')
-    });
-    
-    // استقبال طلب تحديث البيانات
-    socket.on('request-update', () => {
-        socket.emit('visitors-update', visitors);
-        socket.emit('online-count', onlineVisitors);
-    });
-    
-    // عند فصل المستخدم
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', () => {
         onlineVisitors--;
-        console.log(`🔌 مستخدم قطع الاتصال - العدد الحالي: ${onlineVisitors} (السبب: ${reason})`);
-        
-        // إعلام الجميع بتحديث العدد
-        socket.broadcast.emit('online-count', onlineVisitors);
-    });
-    
-    // معالجة الأخطاء
-    socket.on('error', (error) => {
-        console.log('❌ خطأ في Socket:', error);
+        io.emit('online-count', onlineVisitors);
     });
 });
-
-// ✅ تحديث دوري للاتصالات (كل 30 ثانية)
-setInterval(() => {
-    if (io.engine.clientsCount > 0) {
-        console.log(`📊 إحصائيات: ${io.engine.clientsCount} اتصال Socket مفتوح، ${onlineVisitors} زائر متصل`);
-        
-        // إرسال تحديث للجميع
-        io.emit('ping-server', {
-            time: moment().format('YYYY-MM-DD HH:mm:ss'),
-            online: onlineVisitors
-        });
-    }
-}, 30000);
 
 // تشغيل السيرفر
 server.listen(PORT, '0.0.0.0', () => {
-    console.log('\n' + '='.repeat(60));
+    console.log('\n' + '='.repeat(50));
     console.log(`🚀 السيرفر يعمل بنجاح على Render!`);
-    console.log('='.repeat(60));
+    console.log('='.repeat(50));
     console.log(`📊 المنفذ: ${PORT}`);
     console.log(`🌐 الرابط: https://visitor-tracker-ebc4.onrender.com`);
     console.log(`🔍 Debug: https://visitor-tracker-ebc4.onrender.com/debug`);
     console.log(`🏓 Ping: https://visitor-tracker-ebc4.onrender.com/ping`);
     console.log(`📋 لوحة التحكم: https://visitor-tracker-ebc4.onrender.com/`);
     console.log(`🔗 رابط التتبع: https://visitor-tracker-ebc4.onrender.com/track?page=example`);
-    console.log(`📡 Socket Status: https://visitor-tracker-ebc4.onrender.com/socket-status`);
-    console.log('='.repeat(60));
-    console.log(`✅ Socket.io جاهز للعمل`);
-    console.log('='.repeat(60) + '\n');
+    console.log('='.repeat(50) + '\n');
 });
