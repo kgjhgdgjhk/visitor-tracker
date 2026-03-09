@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الزوار | Visitor Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideDown 0.8s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h1 i {
+            color: #667eea;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .track-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .track-link:hover {
+            transform: scale(1.05);
+        }
+
+        .track-link i {
+            font-size: 1.2em;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.8s ease;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.4s; }
+        .stat-card:nth-child(4) { animation-delay: 0.6s; }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon i {
+            font-size: 30px;
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* Visitors Table */
+        .visitors-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .section-title i {
+            color: #667eea;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: right;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 3px solid #667eea;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #555;
+        }
+
+        tr {
+            transition: all 0.3s;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 18px;
+            margin-left: 8px;
+            border-radius: 3px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            display: inline-block;
+        }
+
+        .time-ago {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        /* Loading Animation */
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .stat-card {
+                padding: 20px;
+            }
+            
+            .stat-value {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                لوحة تحكم الزوار
+            </h1>
+            <p>مراقبة الزوار في الوقت الفعلي</p>
+            <div class="track-link" onclick="copyTrackLink()">
+                <i class="fas fa-link"></i>
+                <span id="track-link-text">جاري تحميل الرابط...</span>
+                <i class="fas fa-copy"></i>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value" id="total-visitors">0</div>
+                <div class="stat-label">إجمالي الزوار</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-value" id="online-visitors">0</div>
+                <div class="stat-label">
+                    متصل الآن
+                    <span class="online-dot"></span>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <div class="stat-value" id="unique-countries">0</div>
+                <div class="stat-label">دول مختلفة</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value" id="today-visitors">0</div>
+                <div class="stat-label">زوار اليوم</div>
+            </div>
+        </div>
+
+        <!-- Visitors Table -->
+        <div class="visitors-section">
+            <div class="section-title">
+                <i class="fas fa-history"></i>
+                <h3>آخر الزوار</h3>
+            </div>
+            
+            <div class="table-container">
+                <table id="visitors-table">
+                    <thead>
+                        <tr>
+                            <th>الوقت</th>
+                            <th>الدولة</th>
+                            <th>IP</th>
+                            <th>الجهاز</th>
+                            <th>المتصفح</th>
+                            <th>نظام التشغيل</th>
+                            <th>الصفحة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visitors-body">
+                        <tr>
+                            <td colspan="7" style="text-align: center;">
+                                <div class="loader"></div>
+                                جاري تحميل البيانات...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        
+        // نسخ رابط التتبع
+        function copyTrackLink() {
+            const link = document.getElementById('track-link-text').textContent;
+            navigator.clipboard.writeText(link);
+            alert('تم نسخ الرابط!');
+        }
+
+        // تحديث رابط التتبع
+        const trackLink = `${window.location.origin}/track`;
+        document.getElementById('track-link-text').textContent = trackLink;
+
+        // تحديث الإحصائيات
+        function updateStats(visitors) {
+            // إجمالي الزوار
+            document.getElementById('total-visitors').textContent = visitors.length;
+            
+            // الدول المختلفة
+            const countries = new Set(visitors.map(v => v.location.country));
+            document.getElementById('unique-countries').textContent = countries.size;
+            
+            // زوار اليوم
+            const today = new Date().toDateString();
+            const todayVisitors = visitors.filter(v => {
+                const visitorDate = new Date(v.timestamp).toDateString();
+                return visitorDate === today;
+            }).length;
+            document.getElementById('today-visitors').textContent = todayVisitors;
+        }
+
+        // عرض الزوار في الجدول
+        function displayVisitors(visitors) {
+            const tbody = document.getElementById('visitors-body');
+            
+            if (visitors.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 50px;">
+                            <i class="fas fa-user-slash" style="font-size: 3em; color: #ccc;"></i>
+                            <p style="color: #999; margin-top: 15px;">لا يوجد زوار حتى الآن</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = visitors.map((visitor, index) => `
+                <tr style="animation-delay: ${index * 0.1}s">
+                    <td>
+                        <div>${visitor.timestamp}</div>
+                        <div class="time-ago">${visitor.timeAgo}</div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center;">
+                            ${visitor.location.flag ? 
+                                `<img src="${visitor.location.flag}" class="flag-icon" alt="flag">` : 
+                                '<i class="fas fa-globe" style="margin-left: 8px; color: #667eea;"></i>'
+                            }
+                            ${visitor.location.country}
+                            <span style="color: #999; margin-right: 5px;">(${visitor.location.city})</span>
+                        </div>
+                    </td>
+                    <td><span class="badge">${visitor.ip}</span></td>
+                    <td>
+                        <i class="fas fa-${visitor.device.device.toLowerCase().includes('mobile') ? 'mobile-alt' : 'desktop'}" 
+                           style="margin-left: 8px; color: #667eea;"></i>
+                        ${visitor.device.device}
+                    </td>
+                    <td>
+                        <i class="fas fa-globe" style="margin-left: 8px; color: #667eea;"></i>
+                        ${visitor.device.browser}
+                    </td>
+                    <td>
+                        <i class="fas fa-${visitor.device.os.toLowerCase().includes('windows') ? 'windows' : 
+                                           visitor.device.os.toLowerCase().includes('mac') ? 'apple' : 
+                                           visitor.device.os.toLowerCase().includes('linux') ? 'linux' : 'code'}" 
+                           style="margin-left: 8px; color: #667eea;"></i>
+                        ${visitor.device.os}
+                    </td>
+                    <td>
+                        <span class="badge">${visitor.page}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // استقبال تحديثات الزوار
+        socket.on('visitors-update', (visitors) => {
+            displayVisitors(visitors);
+            updateStats(visitors);
+        });
+
+        // استقبال زائر جديد
+        socket.on('new-visitor', (visitor) => {
+            // إظهار إشعار
+            if (Notification.permission === 'granted') {
+                new Notification('زائر جديد!', {
+                    body: `من ${visitor.location.country} - ${visitor.location.city}`,
+                    icon: visitor.location.flag || '/favicon.ico'
+                });
+            }
+        });
+
+        // تحديث عدد المتصلين
+        socket.on('online-count', (count) => {
+            document.getElementById('online-visitors').textContent = count;
+        });
+
+        // طلب الإذن للإشعارات
+        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission();
+        }
+
+        // جلب البيانات الأولية
+        fetch('/api/visitors')
+            .then(res => res.json())
+            .then(visitors => {
+                displayVisitors(visitors);
+                updateStats(visitors);
+            });
+    </script>
+</body>
+</html>
