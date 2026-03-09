@@ -1,15 +1,12 @@
-# render.yaml
 services:
   - type: web
     name: visitor-tracker
     runtime: node
-    repo: https://github.com/اسم-مستخدمك/visitor-tracker
+    repo: https://github.com/kgjhgdgjhk/visitor-tracker
     plan: free
-    region: ohio  # أو اختر منطقة قريبة منك
+    region: ohio
     buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
